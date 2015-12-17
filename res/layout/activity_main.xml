@@ -1,0 +1,71 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/background"
+    android:orientation="vertical" >
+
+    <Button
+        android:id="@+id/btn_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="登陆" />
+
+    <Button
+        android:id="@+id/btn_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="注销" />
+
+    <Button
+        android:id="@+id/btn_call"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="呼叫" />
+
+    <EditText
+        android:id="@+id/et_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:editable="true"
+        android:ems="10"
+        android:hint="输入用户名" >
+
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/btn_sendmessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送消息" />
+
+    <EditText
+        android:id="@+id/et_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:editable="true"
+        android:ems="10"
+        android:hint="输入要发送的消息" >
+
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/btn_sendalphamessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送透明消息" />
+
+    <EditText
+        android:id="@+id/et_alphamessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:editable="true"
+        android:ems="10"
+        android:hint="输入要发送的透明消息" >
+
+        <requestFocus />
+    </EditText>
+
+</LinearLayout>
