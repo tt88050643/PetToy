@@ -453,6 +453,5 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 			destroyCurActivity();
 			break;
 		}
-		
 	}
 }
