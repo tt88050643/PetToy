@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.bairuitech.anychat.AnyChatCoreSDK;
 import com.bairuitech.anychat.AnyChatDefine;
+import com.example.helloanychat.MainActivity;
 import com.example.helloanychat.R;
 import com.example.helloanychat.VideoActivity;
 import com.example.util.BaseConst;
@@ -26,9 +27,11 @@ public class BussinessCenter{
 	public static SessionItem sessionItem;
 	public static ScreenInfo mScreenInfo;
 	public static Activity mContext;
-	public static ArrayList<UserItem> mOnlineFriendItems;
-	public static ArrayList<Integer> mOnlineFriendIds;
-
+	
+	//by zm
+	public static ArrayList<OnlineUserItem> mOnlineUserItems;
+	
+	
 	public static int selfUserId;
 	public static boolean bBack = false;// 程序是否在后台
 	public static String selfUserName;
@@ -45,8 +48,8 @@ public class BussinessCenter{
 
 	private void initParams() {
 		anychat = new AnyChatCoreSDK();
-		mOnlineFriendItems = new ArrayList<UserItem>();
-		mOnlineFriendIds = new ArrayList<Integer>();
+		//by zm
+		mOnlineUserItems = new ArrayList<OnlineUserItem>();
 	}
 
 	/***
@@ -59,7 +62,6 @@ public class BussinessCenter{
 
 			@Override
 			public void onCompletion(MediaPlayer mp) {
-				// TODO Auto-generated method stub
 				mMediaPlaer.start();
 			}
 		});
@@ -82,31 +84,35 @@ public class BussinessCenter{
 		}
 	}
 
-	/***
-	 * @param userId 用户id
-	 * @param status 用户在线状态，1是上线，0是下线  
-	 */
-	public void onUserOnlineStatusNotify(int userId, int status) {
-		String strMsg = "";
-		UserItem userItem = getUserItemByUserId(userId);
-		if (userItem == null)
-			return;
-		if (status == UserItem.USERSTATUS_OFFLINE) {
-			if (mOnlineFriendIds.indexOf(userId) >= 0) {
-				mOnlineFriendItems.remove(userItem);
-				mOnlineFriendIds.remove((Object) userId);
-			}
-			strMsg = userItem.getUserName() + "下线";
-		} else {
-			strMsg = userItem.getUserName() + "上线";
-		}
-		if (mContext != null)
-			BaseMethod.showToast(strMsg, mContext);
-	}
+//	/***
+//	 * @param userId 用户id
+//	 * @param status 用户在线状态，1是上线，0是下线  
+//	 */
+//	public void onUserOnlineStatusNotify(int userId, int status) {
+//		Log.i("cool", "context?" + mContext.toString() + ";   " + getUserItemByUserId(userId));
+//		String strMsg = "";
+//		UserItem userItem = getUserItemByUserId(userId);
+//		if (userItem == null)
+//			return;
+//		if (status == UserItem.USERSTATUS_OFFLINE) {
+//			if (mOnlineFriendIds.indexOf(userId) >= 0) {
+//				mOnlineFriendItems.remove(userItem);
+//				mOnlineFriendIds.remove((Object) userId);
+//			}
+//			strMsg = userItem.getUserName() + "下线";
+//		} else {
+//			strMsg = userItem.getUserName() + "上线";
+//		}
+//		
+//		if (mContext != null)
+//			BaseMethod.showToast(strMsg, mContext);
+//	}
 
 	public void realse() {
 		anychat = null;
-		mOnlineFriendItems = null;
+		//by zm
+		mOnlineUserItems = null;
+		
 		mMediaPlaer = null;
 		mScreenInfo = null;
 		mContext = null;
@@ -114,8 +120,8 @@ public class BussinessCenter{
 	}
 
 	public void realseData() {
-		mOnlineFriendItems.clear();
-		mOnlineFriendIds.clear();
+		//by zm
+		mOnlineUserItems.clear();
 	}
 
 	/***
@@ -136,9 +142,9 @@ public class BussinessCenter{
 		playCallReceivedMusic(mContext);
 		// 如果程序在后台，通知有呼叫请求
 		if (bBack) {
-			UserItem item = getUserItemByUserId(dwUserId);
+			OnlineUserItem item = getUserItemByUserId(dwUserId);
 			Bundle bundle = new Bundle();
-			if (item != null) {
+			if (item != null) {//往通知栏发送通知
 				bundle.putString("USERNAME", item.getUserName()	+ mContext.getString(R.string.sessioning_reqite));
 			} else {
 				bundle.putString("USERNAME", "some one call you");
@@ -150,7 +156,6 @@ public class BussinessCenter{
 
 	public void onVideoCallReply(int dwUserId, int dwErrorCode,
 			int dwFlags, int dwParam, String szUserStr) {
-		// TODO Auto-generated method stub
 		String strMessage = null;
 		switch (dwErrorCode) {
 		case AnyChatDefine.BRAC_ERRORCODE_SESSION_BUSY:
@@ -178,7 +183,7 @@ public class BussinessCenter{
 		}
 		if (strMessage != null) {
 			BaseMethod.showToast(strMessage, mContext);
-			// 如果程序在后台，通知通话结束
+			// 如果程序在后台，并且有错误，通知通话结束
 			if (bBack) {
 				Bundle bundle = new Bundle();
 				bundle.putInt("USERID", dwUserId);
@@ -189,20 +194,18 @@ public class BussinessCenter{
 		}
 	}
 
-	public void onVideoCallStart(int dwUserId, int dwFlags, int dwParam,
-			String szUserStr) {
-		// TODO Auto-generated method stub
+	public void onVideoCallStart(int dwUserId, int dwFlags, int dwParam, String szUserStr) {
 		stopSessionMusic();
 		sessionItem = new SessionItem(dwFlags, selfUserId, dwUserId);
 		sessionItem.setRoomId(dwParam);
 		Intent intent = new Intent();
-		intent.setClass(mContext, VideoActivity.class);
-		mContext.startActivity(intent);
+		intent.putExtra("UserID", String.valueOf(dwUserId));//注意此处dwUserId要转成String，传入
+		intent.setClass(BussinessCenter.mContext, VideoActivity.class);
+		BussinessCenter.mContext.startActivity(intent);
 	}
 
 	public void onVideoCallEnd(int dwUserId, int dwFlags, int dwParam,
 			String szUserStr) {
-		// TODO Auto-generated method stub
 		sessionItem = null;
 	}
 
@@ -213,11 +216,10 @@ public class BussinessCenter{
 	 *            用户id
 	 * @return
 	 */
-	public UserItem getUserItemByUserId(int userId) {
-
-		int size = mOnlineFriendItems.size();
+	public OnlineUserItem getUserItemByUserId(int userId) {
+		int size = mOnlineUserItems.size();
 		for (int i = 0; i < size; i++) {
-			UserItem userItem = mOnlineFriendItems.get(i);
+			OnlineUserItem userItem = mOnlineUserItems.get(i);
 			if (userItem != null && userItem.getUserId() == userId) {
 				return userItem;
 			}
@@ -225,52 +227,81 @@ public class BussinessCenter{
 		return null;
 	}
 
-	public UserItem getUserItemByIndex(int index) {
+	public OnlineUserItem getUserItemByIndex(int index) {
 		try {
-			return mOnlineFriendItems.get(index);
+			return mOnlineUserItems.get(index);
 		} catch (Exception e) {
-			// TODO: handle exception
 			return null;
 		}
 	}
-
+//
+//	/***
+//	 * 获取好友数据    在同一个房间中拿不到好友？
+//	 */
+//	public void getOnlineFriendDatas() {
+//		mOnlineFriendItems.clear();
+//		mOnlineFriendIds.clear();
+//		// 获取本地ip
+//		String ip = anychat.QueryUserStateString(-1,
+//				AnyChatDefine.BRAC_USERSTATE_LOCALIP);
+//		
+//		UserItem userItem = new UserItem(selfUserId, selfUserName, ip);
+//		// 获取用户好友userid列表
+//		int[] friendUserIds = anychat.GetUserFriends();
+//		int friendUserId = 0;
+//		mOnlineFriendItems.add(userItem);
+//		mOnlineFriendIds.add(selfUserId);
+//		if (friendUserIds == null)
+//			return;
+//		for (int i = 0; i < friendUserIds.length; i++) {
+//			friendUserId = friendUserIds[i];
+//			int onlineStatus = anychat.GetFriendStatus(friendUserId);
+//			if (onlineStatus == UserItem.USERSTATUS_OFFLINE) {
+//				continue;
+//			}
+//			userItem = new UserItem();
+//			userItem.setUserId(friendUserId);
+//			// 获取好友昵称
+//			String nickName = anychat.GetUserInfo(friendUserId,
+//					UserItem.USERINFO_NAME);
+//			if (nickName != null)
+//				userItem.setUserName(nickName);
+//			// 获取好友IP地址
+//			String strIp = anychat.GetUserInfo(friendUserId,
+//					UserItem.USERINFO_IP);
+//			if (strIp != null)
+//				userItem.setIp(strIp);
+//			mOnlineFriendItems.add(userItem);
+//			mOnlineFriendIds.add(friendUserId);
+//		}
+//	}
+	
 	/***
-	 * 获取好友数据
+	 * 获取当前在线用户数据 
 	 */
-	public void getOnlineFriendDatas() {
-		mOnlineFriendItems.clear();
-		mOnlineFriendIds.clear();
-		// 获取本地ip
-		String ip = anychat.QueryUserStateString(-1,
-				AnyChatDefine.BRAC_USERSTATE_LOCALIP);
-		UserItem userItem = new UserItem(selfUserId, selfUserName, ip);
-		// 获取用户好友userid列表
-		int[] friendUserIds = anychat.GetUserFriends();
-		int friendUserId = 0;
-		mOnlineFriendItems.add(userItem);
-		mOnlineFriendIds.add(selfUserId);
-		if (friendUserIds == null)
+	public void getOnlineUserDatas() {
+		mOnlineUserItems.clear();
+		// 获取自己的ip
+		String ip = anychat.QueryUserStateString(-1, AnyChatDefine.BRAC_USERSTATE_LOCALIP);
+		OnlineUserItem onlineUserItem = new OnlineUserItem(selfUserId, selfUserName, ip);
+		//获取在线用户列表
+		int[] onlineUserIds = anychat.GetOnlineUser();
+		int userId = 0;
+		mOnlineUserItems.add(onlineUserItem);//把自己添加进
+		if (onlineUserIds == null)
 			return;
-		for (int i = 0; i < friendUserIds.length; i++) {
-			friendUserId = friendUserIds[i];
-			int onlineStatus = anychat.GetFriendStatus(friendUserId);
-			if (onlineStatus == UserItem.USERSTATUS_OFFLINE) {
-				continue;
-			}
-			userItem = new UserItem();
-			userItem.setUserId(friendUserId);
-			// 获取好友昵称
-			String nickName = anychat.GetUserInfo(friendUserId,
-					UserItem.USERINFO_NAME);
-			if (nickName != null)
-				userItem.setUserName(nickName);
-			// 获取好友IP地址
-			String strIp = anychat.GetUserInfo(friendUserId,
-					UserItem.USERINFO_IP);
+		for (int i = 0; i < onlineUserIds.length; i++) {
+			userId = onlineUserIds[i];
+			onlineUserItem = new OnlineUserItem();
+			onlineUserItem.setUserId(userId);
+			// 获取在线用户IP地址
+			String strIp = anychat.GetUserIPAddr(userId);
 			if (strIp != null)
-				userItem.setIp(strIp);
-			mOnlineFriendItems.add(userItem);
-			mOnlineFriendIds.add(friendUserId);
+				onlineUserItem.setStrIp(strIp);
+			String strName = anychat.GetUserName(userId);
+			if (strIp != null)
+				onlineUserItem.setUserName(strName);
+			mOnlineUserItems.add(onlineUserItem);
 		}
 	}
 

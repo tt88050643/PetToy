@@ -53,7 +53,7 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 		InitSDK();
 		InitLayout();
 
-		// 如果视频流过来了，则把背景设置成透明的
+		// 根据码率判断视频是否断线，每个一段时间获取一次码率来判断
 		handler.postDelayed(runnable, UPDATEVIDEOBITDELAYMILLIS);
 	}
 
@@ -153,11 +153,11 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 				
 				if (mFirstGetVideoBitrate)
 				{
-					if (videoBitrate <= 0){						
+					if (videoBitrate <= 0){	//等待第一次获得码率，第一次码率大于0后，认为视频已经接通，此后的码率都应该大于0，否则认为视频断线					
 						Toast.makeText(VideoActivity.this, "对方视频中断了!", Toast.LENGTH_SHORT).show();
 						// 重置下，如果对方退出了，有进去了的情况
 						mFirstGetVideoBitrate = false;
-						finish();
+						//finish();
 					}
 				}
 				
@@ -166,7 +166,7 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 						Toast.makeText(VideoActivity.this, "对方音频中断了!", Toast.LENGTH_SHORT).show();
 						// 重置下，如果对方退出了，有进去了的情况
 						mFirstGetAudioBitrate = false;
-						finish();
+						//finish();
 					}
 				}
 
@@ -298,11 +298,11 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 
 	protected void onPause() {
 		super.onPause();
-		bOnPaused = true;
-		anychatSDK.UserCameraControl(userID, 0);
-		anychatSDK.UserSpeakControl(userID, 0);
-		anychatSDK.UserCameraControl(-1, 0);
-		anychatSDK.UserSpeakControl(-1, 0);
+//		bOnPaused = true;
+//		anychatSDK.UserCameraControl(userID, 0);
+//		anychatSDK.UserSpeakControl(userID, 0);
+//		anychatSDK.UserCameraControl(-1, 0);
+//		anychatSDK.UserSpeakControl(-1, 0);
 	}
 
 	protected void onDestroy() {
@@ -394,17 +394,12 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 				anychatSDK.UserCameraControl(dwUserId, 0);
 				anychatSDK.UserSpeakControl(dwUserId, 0);
 				bOtherVideoOpened = false;
-				
 			}
-
 		} else {
 			if (userID != 0)
 				return;
-
-			int index = anychatSDK.mVideoHelper.bindVideo(mOtherView
-					.getHolder());
+			int index = anychatSDK.mVideoHelper.bindVideo(mOtherView.getHolder());
 			anychatSDK.mVideoHelper.SetVideoUser(index, dwUserId);
-
 			anychatSDK.UserCameraControl(dwUserId, 1);
 			anychatSDK.UserSpeakControl(dwUserId, 1);
 			userID = dwUserId;

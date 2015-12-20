@@ -44,7 +44,7 @@ public class AnyChatCoreSDK
 	// 获取单例模式对象
 	public synchronized static AnyChatCoreSDK getInstance(Context context)
 	{
-		if(mAnyChat==null)
+		if(mAnyChat == null)
 			mAnyChat = new AnyChatCoreSDK();
 		return mAnyChat;
 	}
