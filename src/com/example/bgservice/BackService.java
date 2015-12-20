@@ -21,7 +21,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-public class BackService extends Service {
+public class BackService extends Service{
 	private ActivityManager activityManager;
 	List<RunningAppProcessInfo> appProcesses;
 	private String packageName;
@@ -205,5 +205,6 @@ public class BackService extends Service {
 			System.out.println(e);
 		}
 	}
+	
 
 }

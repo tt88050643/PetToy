@@ -97,9 +97,7 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	}
 
 	private void InitSDK() {
-		if (anyChatSDK == null) {
-			anyChatSDK = AnyChatCoreSDK.getInstance(this);
-		}
+		anyChatSDK = AnyChatCoreSDK.getInstance(this);
 		anyChatSDK.SetBaseEvent(this);
 		anyChatSDK.SetVideoCallEvent(this);// 设置视频呼叫事件通知接口
 		anyChatSDK.InitSDK(android.os.Build.VERSION.SDK_INT, 0);
@@ -108,6 +106,7 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		AnyChatCoreSDK.SetSDKOptionInt(
 				AnyChatDefine.BRAC_SO_LOCALVIDEO_AUTOROTATION,
 				LOCALVIDEOAUTOROTATION);
+		BussinessCenter.mContext = MainActivity.this;
 	}
 
 	private void InitLayout() {
@@ -145,6 +144,8 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		mBtnCall.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				Log.i("cool", "我发起了视频请求，我的Name：" + anyChatSDK.GetUserName(BussinessCenter.selfUserId) + 
+						"对方的Name：" + anyChatSDK.GetUserName(OtherID));
 				BussinessCenter.VideoCallControl(
 						AnyChatDefine.BRAC_VIDEOCALL_EVENT_REQUEST, OtherID,
 						AnyChatDefine.BRAC_ERRORCODE_SUCCESS, 0, 0, "");
@@ -189,11 +190,6 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		preferencesEditor.commit();
 	}
 
-	protected void onStart() {
-		super.onStart();
-		Log.i("cool", "onStart");
-	}
-
 	protected void onDestroy() {
 		super.onDestroy();
 		Log.i("cool", "onDestroy");
@@ -205,7 +201,6 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 
 	protected void onResume() {
 		super.onResume();
-		BussinessCenter.mContext = MainActivity.this;
 		InitSDK();
 		Log.i("cool", "onResume");
 	}
@@ -500,7 +495,7 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 					dwFlags, dwParam, userStr);
 			break;
 		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_FINISH:// 挂断（结束）呼叫会话
-			Log.i("cool", "会话挂断");
+			Log.i("cool", "会话挂断事件！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！");
 			 BussinessCenter.getBussinessCenter().onVideoCallEnd(dwUserId,
 			 dwFlags, dwParam, userStr);
 			break;

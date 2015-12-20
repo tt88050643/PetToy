@@ -3,9 +3,12 @@ package com.example.helloanychat;
 import com.bairuitech.anychat.AnyChatBaseEvent;
 import com.bairuitech.anychat.AnyChatCoreSDK;
 import com.bairuitech.anychat.AnyChatDefine;
+import com.bairuitech.anychat.AnyChatVideoCallEvent;
+import com.example.bussinesscenter.BussinessCenter;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent.OnFinished;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -13,6 +16,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
 import android.view.View;
@@ -23,7 +27,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-public class VideoActivity extends Activity implements AnyChatBaseEvent {
+public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChatVideoCallEvent {
 
 	private final int UPDATEVIDEOBITDELAYMILLIS = 200; //监听音频视频的码率的间隔刷新时间（毫秒）
 	
@@ -52,7 +56,7 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 
 		InitSDK();
 		InitLayout();
-
+		// 如果视频流过来了，则把背景设置成透明的
 		// 根据码率判断视频是否断线，每个一段时间获取一次码率来判断
 		handler.postDelayed(runnable, UPDATEVIDEOBITDELAYMILLIS);
 	}
@@ -60,6 +64,7 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 	private void InitSDK() {
 		anychatSDK = new AnyChatCoreSDK();
 		anychatSDK.SetBaseEvent(this);
+		anychatSDK.SetVideoCallEvent(this);
 		anychatSDK.mSensorHelper.InitSensor(this);
 		AnyChatCoreSDK.mCameraHelper.SetContext(this);
 	}
@@ -252,6 +257,10 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 							@Override
 							public void onClick(DialogInterface dialog,
 									int which) {
+								BussinessCenter.sessionItem = null;
+								BussinessCenter.VideoCallControl(AnyChatDefine.BRAC_VIDEOCALL_EVENT_FINISH, userID, 0,
+										0, BussinessCenter.selfUserId, "");
+								
 								destroyCurActivity();
 							}
 						})
@@ -298,11 +307,11 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 
 	protected void onPause() {
 		super.onPause();
-//		bOnPaused = true;
-//		anychatSDK.UserCameraControl(userID, 0);
-//		anychatSDK.UserSpeakControl(userID, 0);
-//		anychatSDK.UserCameraControl(-1, 0);
-//		anychatSDK.UserSpeakControl(-1, 0);
+		bOnPaused = true;
+		anychatSDK.UserCameraControl(userID, 0);
+		anychatSDK.UserSpeakControl(userID, 0);
+		anychatSDK.UserCameraControl(-1, 0);
+		anychatSDK.UserSpeakControl(-1, 0);
 	}
 
 	protected void onDestroy() {
@@ -425,5 +434,25 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent {
 		Intent mIntent = new Intent("VideoActivity");
 		// 发送广播
 		sendBroadcast(mIntent);
+	}
+
+	@Override
+	public void OnAnyChatVideoCallEvent(int dwEventType, int dwUserId,
+			int dwErrorCode, int dwFlags, int dwParam, String userStr) {
+		switch (dwEventType) {
+		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_REQUEST: // 呼叫请求(接收方收到请求时触发)
+			break;
+		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_REPLY:// 呼叫请求回复(发送方接收到接收方回复时触发)
+			break;
+		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_START:// 视频呼叫会话开始事件
+			break;
+		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_FINISH:// 挂断（结束）呼叫会话
+			Log.i("cool", "会话挂断事件！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！");
+			BussinessCenter.sessionItem = null;
+			finish();
+			destroyCurActivity();
+			break;
+		}
+		
 	}
 }

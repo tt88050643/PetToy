@@ -134,7 +134,8 @@ public class BussinessCenter{
 	 * @param szUserStr		自定义参数，传给对方         
 	 */
 	public static void VideoCallControl(int dwEventType, int dwUserId, int dwErrorCode, int dwFlags, int dwParam, String szUserStr) {
-		anychat.VideoCallControl(dwEventType, dwUserId, dwErrorCode, dwFlags, dwParam, szUserStr);
+		int result = anychat.VideoCallControl(dwEventType, dwUserId, dwErrorCode, dwFlags, dwParam, szUserStr);
+		Log.i("cool", dwEventType + ";" + result);
 	}
 
 	public void onVideoCallRequest(int dwUserId, int dwFlags,
