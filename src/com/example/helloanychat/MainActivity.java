@@ -23,62 +23,48 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements AnyChatBaseEvent,
 		AnyChatTransDataEvent, AnyChatTextMsgEvent, AnyChatVideoCallEvent {
 	// 视频配置界面标识
 	public static final int ACTIVITY_ID_VIDEOCONFIG = 1;
-	public static Activity mContext;
-	public static boolean bBack = false;// 程序是否在后台
-
-	private String mStrIP = "tt88050643.xicp.net";
-	// private String mStrIP = "demo.anychat.cn";
-	private String mStrName;
-	private int mSPort = 8906;
-	private int mSRoomID = 1;
 
 	private final int SHOWLOGINSTATEFLAG = 1; // 显示的按钮是登陆状态的标识
 	private final int SHOWWAITINGSTATEFLAG = 2; // 显示的按钮是等待状态的标识
 	private final int SHOWLOGOUTSTATEFLAG = 3; // 显示的按钮是登出状态的标识
 	private final int LOCALVIDEOAUTOROTATION = 1; // 本地视频自动旋转控制
-
-	private List<RoleInfo> mRoleInfoList = new ArrayList<RoleInfo>();
-	private RoleListAdapter mAdapter;
-	private int OtherID;
+	// private String mStrIP = "demo.anychat.cn";
+	private String mStrIP = "tt88050643.xicp.net";
+	private String mStrUserName;// 我的用户名
+	private int mIntPort = 8906;
+	private int mIntRoomID = 1;
 
 	public AnyChatCoreSDK anyChatSDK;
 
-	private Button mBtnStart;
-	private Button mBtnEnd;
-	private Button mBtnCall;
-	private EditText mEtName;
-	private EditText mEtMessage;
-	private Button mBtnMsgSend;
-	private EditText mEtAlphaMessage;
-	private Button mBtnAlphaMsgSend;
+	private RoleListAdapter mAdapter;
+	private ListView mLvOnlineUsers;
+	private Button mBtnLogin;
+	private Button mBtnLogout;
+	private EditText mEtUserName;// 我登陆的用户名
+	private EditText mEtRoomID;// 我进入的房间号
+	private EditText mEtServerName;
 
 	protected void onCreate(Bundle savedInstanceState) {
-
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
-		mBtnStart = (Button) findViewById(R.id.btn_start);
-		mBtnEnd = (Button) findViewById(R.id.btn_end);
-		mBtnCall = (Button) findViewById(R.id.btn_call);
-		mEtName = (EditText) findViewById(R.id.et_name);
-		mBtnMsgSend = (Button) findViewById(R.id.btn_sendmessage);
-		mEtMessage = (EditText) findViewById(R.id.et_message);
-		mBtnAlphaMsgSend = (Button) findViewById(R.id.btn_sendalphamessage);
-		mEtAlphaMessage = (EditText) findViewById(R.id.et_alphamessage);
-		Log.i("cool", "onCreate");
 		InitSDK();
 		InitLayout();
 
@@ -86,7 +72,6 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		registerBoradcastReceiver();
 		startBackServce();// 开启后台service，用于当程序进入后台后在通知栏控制通知
 		BussinessCenter.getBussinessCenter();
-
 	}
 
 	// 开启后台service
@@ -110,19 +95,30 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	}
 
 	private void InitLayout() {
-		mBtnStart.setOnClickListener(new OnClickListener() {
+		mBtnLogin = (Button) findViewById(R.id.btn_login);
+		mBtnLogout = (Button) findViewById(R.id.btn_logout);
+		mEtUserName = (EditText) findViewById(R.id.et_username);
+		mEtServerName = (EditText) findViewById(R.id.et_servername);
+		mEtRoomID = (EditText) findViewById(R.id.et_roomid);
+		mLvOnlineUsers = (ListView) findViewById(R.id.lv_onlineuser);
+
+		ReadLoginData();
+		mBtnLogin.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				String mStrName = mEtName.getText().toString();
-				anyChatSDK.Connect(mStrIP, mSPort);
-				anyChatSDK.Login(mStrName, "");
+				mStrUserName = mEtUserName.getText().toString();
+				mStrIP = mEtServerName.getText().toString();
+				anyChatSDK.Connect(mStrIP, mIntPort);
+				anyChatSDK.Login(mStrUserName, "");
 			}
 		});
-		mBtnEnd.setOnClickListener(new OnClickListener() {
+		mBtnLogout.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				anyChatSDK.LeaveRoom(-1);
 				anyChatSDK.Logout();
+				mBtnLogout.setBackgroundResource(R.drawable.btn_green_pressed);
+				mBtnLogin.setBackgroundResource(R.drawable.btn_green_normal);
 			}
 		});
 		/***
@@ -141,53 +137,69 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		 * @param szUserStr
 		 *            自定义参数，传给对方
 		 */
-		mBtnCall.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Log.i("cool", "我发起了视频请求，我的Name：" + anyChatSDK.GetUserName(BussinessCenter.selfUserId) + 
-						"对方的Name：" + anyChatSDK.GetUserName(OtherID));
-				BussinessCenter.VideoCallControl(
-						AnyChatDefine.BRAC_VIDEOCALL_EVENT_REQUEST, OtherID,
-						AnyChatDefine.BRAC_ERRORCODE_SUCCESS, 0, 0, "");
-			}
-		});
-		mBtnMsgSend.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				String message = mEtMessage.getText().toString();
-				anyChatSDK.SendTextMessage(OtherID, 1, message);
-			}
-		});
-		mBtnAlphaMsgSend.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				String alphaMessage = mEtAlphaMessage.getText().toString()
-						.trim();
-				byte[] strByteMsg = null;
-				if (ValueUtils.isStrEmpty(alphaMessage))
-					return;
-				try {
-					strByteMsg = alphaMessage.getBytes("UTF8");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				// 传送接口
-				anyChatSDK.TransBuffer(OtherID, strByteMsg, strByteMsg.length);
-			}
-		});
+		// mBtnCall.setOnClickListener(new OnClickListener() {
+		// @Override
+		// public void onClick(View v) {
+		// Log.i("cool", "我发起了视频请求，我的Name：" +
+		// anyChatSDK.GetUserName(BussinessCenter.selfUserId) +
+		// "对方的Name：" + anyChatSDK.GetUserName(OtherID));
+		// BussinessCenter.VideoCallControl(
+		// AnyChatDefine.BRAC_VIDEOCALL_EVENT_REQUEST, OtherID,
+		// AnyChatDefine.BRAC_ERRORCODE_SUCCESS, 0, 0, "");
+		// }
+		// });
+		// mBtnMsgSend.setOnClickListener(new OnClickListener() {
+		// @Override
+		// public void onClick(View v) {
+		// String message = mEtMessage.getText().toString();
+		// anyChatSDK.SendTextMessage(OtherID, 1, message);
+		// }
+		// });
+		// mBtnAlphaMsgSend.setOnClickListener(new OnClickListener() {
+		// @Override
+		// public void onClick(View v) {
+		// String alphaMessage = mEtAlphaMessage.getText().toString()
+		// .trim();
+		// byte[] strByteMsg = null;
+		// if (ValueUtils.isStrEmpty(alphaMessage))
+		// return;
+		// try {
+		// strByteMsg = alphaMessage.getBytes("UTF8");
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// // 传送接口
+		// anyChatSDK.TransBuffer(OtherID, strByteMsg, strByteMsg.length);
+		// }
+		// });
 	}
 
-	// 保存登陆相关数据
+	/**
+	 * 保存登陆信息
+	 */
 	private void saveLoginData() {
 		SharedPreferences preferences = getSharedPreferences("LoginInfo", 0);
 		Editor preferencesEditor = preferences.edit();
 		preferencesEditor.putString("UserIP", mStrIP);
-		preferencesEditor.putString("UserName", mStrName);
-		preferencesEditor.putInt("UserPort", mSPort);
-		preferencesEditor.putInt("UserRoomID", mSRoomID);
+		preferencesEditor.putString("UserName", mStrUserName);
+		preferencesEditor.putInt("UserPort", mIntPort);
+		preferencesEditor.putInt("UserRoomID", mIntRoomID);
 		preferencesEditor.commit();
+	}
+
+	/**
+	 * 读取登陆信息
+	 */
+	private void ReadLoginData() {
+		SharedPreferences preferences = getSharedPreferences("LoginInfo",
+				MODE_PRIVATE);
+		mStrIP = preferences.getString("UserIP", "tt88050643.xicp.net");
+		mStrUserName = preferences.getString("UserName", "xiyangyang");
+		mIntPort = preferences.getInt("UserPort", 8906);
+		mIntRoomID = preferences.getInt("UserRoomID", 1);
+		mEtServerName.setText(mStrIP);
+		mEtUserName.setText(mStrUserName);
+		mEtRoomID.setText(String.valueOf(mIntRoomID));
 	}
 
 	protected void onDestroy() {
@@ -210,8 +222,8 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		super.onRestart();
 		Log.i("cool", "onRestart");
 		// 一种简便的方法，当断网的时候，返回到登录界面，不去刷新用户列表，下面广播已经清空了列表
-		if (mBtnStart.getVisibility() != View.VISIBLE) {
-			updateUserList();
+		if (mBtnLogin.getVisibility() != View.VISIBLE) {
+			createUserList();
 		}
 	}
 
@@ -225,9 +237,10 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	public void OnAnyChatLoginMessage(int dwUserId, int dwErrorCode) {
 		if (dwErrorCode == 0) {
 			BussinessCenter.selfUserId = dwUserId;
+			BussinessCenter.selfUserIconId = BussinessCenter.getBussinessCenter().getRoleRandomIconID();
 			BussinessCenter.selfUserName = anyChatSDK.GetUserName(dwUserId);
-			saveLoginData();
-			anyChatSDK.EnterRoom(mSRoomID, "");
+			// saveLoginData();
+			anyChatSDK.EnterRoom(mIntRoomID, "");
 		}
 	}
 
@@ -237,88 +250,103 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		System.out.println("OnAnyChatEnterRoomMessage" + dwRoomId + "err:"
 				+ dwErrorCode);
 		Log.i("cool", "我已进入房间,RoomID为：" + dwRoomId);
+		if (dwErrorCode == 0) {
+			saveLoginData();
+		}
 	}
 
 	// 用户进入房间成功后触发一次
 	@Override
 	public void OnAnyChatOnlineUserMessage(int dwUserNum, int dwRoomId) {
 		Log.i("cool", "我进来了,进入房间后触发一次");
-		mBtnStart.setBackgroundColor(getResources().getColor(
-				R.color.solid_green));
+		mBtnLogin.setBackgroundResource(R.drawable.btn_green_pressed);
+		mBtnLogout.setBackgroundResource(R.drawable.btn_green_normal);
 		Toast.makeText(this, "登陆成功", Toast.LENGTH_SHORT).show();
-		BussinessCenter.getBussinessCenter().getOnlineUserDatas();
-		for(int i = 0; i < BussinessCenter.mOnlineUserItems.size(); i++){
-			if(BussinessCenter.mOnlineUserItems.get(i).getUserId() != BussinessCenter.selfUserId){
-				OtherID = BussinessCenter.mOnlineUserItems.get(i).getUserId();
-			}
-			Log.i("cool", "Name：" + BussinessCenter.mOnlineUserItems.get(i).getUserName());
+		createUserList();
+		for (OnlineUserItem eachone : BussinessCenter.mOnlineUserItems) {
+			Log.i("cool", "当前在线用户:" + eachone.getUserName());
+		}
+		mEtServerName.setVisibility(View.GONE);
+		mEtRoomID.setVisibility(View.GONE);
+		mEtUserName.setVisibility(View.GONE);
+	}
+
+	// 用户离开或者进入房间触发
+	@Override
+	public void OnAnyChatUserAtRoomMessage(int dwUserId, boolean bEnter) {
+		updateUserList();
+		if(bEnter){
+			Log.i("cool",
+					"有其他人进入房间了，进入房间的用户ID:" + dwUserId + "\n" + "进入房间的用户名:"
+							+ BussinessCenter.getBussinessCenter().getUserItemByUserId(dwUserId).getUserName());
 		}
 		
-		//updateUserList();// 更新在线用户列表，保存在List<RoleInfo> mRoleInfoList中
-		// if(mRoleInfoList.size() == 1){
-		// OtherID = Integer.valueOf(mRoleInfoList.get(0).getUserID());
-		// Log.i("cool", "目前房间里有:" + anyChatSDK.GetUserName(OtherID) + ";" +
-		// "我是：" + anyChatSDK.GetUserName(UserselfID));
-		// }
 	}
 
-	private void updateUserList() {
-		mRoleInfoList.clear();
-		int[] userID = anyChatSDK.GetOnlineUser();
-		RoleInfo userselfInfo = new RoleInfo();
-		userselfInfo.setName(anyChatSDK.GetUserName(BussinessCenter.selfUserId)
-				+ "(自己) 【点击可设置】");
-		userselfInfo.setUserID(String.valueOf(BussinessCenter.selfUserId));
-		userselfInfo.setRoleIconID(getRoleRandomIconID());
-		mRoleInfoList.add(userselfInfo);
+	// 断网触发
+	@Override
+	public void OnAnyChatLinkCloseMessage(int dwErrorCode) {
+		mBtnLogin.setBackgroundResource(R.drawable.btn_green_normal);
+		mBtnLogout.setBackgroundResource(R.drawable.btn_green_normal);
+		anyChatSDK.LeaveRoom(-1);
+		anyChatSDK.Logout();
+	}
 
-		for (int index = 0; index < userID.length; ++index) {
-			RoleInfo info = new RoleInfo();
-			info.setName(anyChatSDK.GetUserName(userID[index]));
-			info.setUserID(String.valueOf(userID[index]));
-			info.setRoleIconID(getRoleRandomIconID());
-			mRoleInfoList.add(info);
+	private void createUserList() {
+		BussinessCenter.getBussinessCenter().getOnlineUserDatas();
+		for(int i = 0; i < BussinessCenter.mOnlineUserItems.size(); i++){
+			OnlineUserItem onlineUserItem = BussinessCenter.mOnlineUserItems.get(i);
+			if(onlineUserItem.getUserId() == BussinessCenter.selfUserId){
+				onlineUserItem.setUserName(BussinessCenter.selfUserName + "(自己) 【点击可设置】");
+			}
 		}
-		mAdapter = new RoleListAdapter(MainActivity.this, mRoleInfoList);
-		// mRoleList.setOnItemClickListener(new OnItemClickListener() {
-		// @Override
-		// public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-		// long arg3) {
-		// if (arg2 == 0) {
-		// Intent intent = new Intent();
-		// intent.setClass(MainActivity.this, VideoConfig.class);
-		// startActivityForResult(intent, ACTIVITY_ID_VIDEOCONFIG);
-		// return;
-		// }
-		//
-		// onSelectItem(arg2);
-		// }
-		// });
+		mAdapter = new RoleListAdapter(MainActivity.this, BussinessCenter.mOnlineUserItems);
+		mLvOnlineUsers.setAdapter(mAdapter);
+		mLvOnlineUsers.setOnItemClickListener(new OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				if (position == 0) {// 点击自己
+					Intent intent = new Intent();
+					intent.setClass(MainActivity.this, VideoConfig.class);
+					startActivityForResult(intent, ACTIVITY_ID_VIDEOCONFIG);
+					return;
+				}
+				onSelectItem(position);// 点击别人
+			}
+		});
 	}
-
-	private void onSelectItem(String userID) {
-		String strUserID = userID;
-		Intent intent = new Intent();
-		intent.putExtra("UserID", strUserID);
-		intent.setClass(this, VideoActivity.class);
-		startActivity(intent);
-	}
-
-	private int getRoleRandomIconID() {
-		int number = new Random().nextInt(5) + 1;
-		if (number == 1) {
-			return R.drawable.role_1;
-		} else if (number == 2) {
-			return R.drawable.role_2;
-		} else if (number == 3) {
-			return R.drawable.role_3;
-		} else if (number == 4) {
-			return R.drawable.role_4;
-		} else if (number == 5) {
-			return R.drawable.role_5;
+	/**
+	 * 更新UserListView
+	 */
+	private void updateUserList(){
+		BussinessCenter.getBussinessCenter().getOnlineUserDatas();
+		for(int i = 0; i < BussinessCenter.mOnlineUserItems.size(); i++){
+			OnlineUserItem onlineUserItem = BussinessCenter.mOnlineUserItems.get(i);
+			if(onlineUserItem.getUserId() == BussinessCenter.selfUserId){
+				onlineUserItem.setUserName(BussinessCenter.selfUserName + "(自己) 【点击可设置】");
+			}
 		}
+		mAdapter.notifyDataSetChanged();
+	}
+	
 
-		return R.drawable.role_1;
+	/**
+	 * listview的item被选中时执行
+	 * 
+	 * @param position
+	 */
+	private void onSelectItem(int position) {
+		int otherID = BussinessCenter.mOnlineUserItems.get(position).getUserId();
+		Log.i("cool",
+				"我发起了视频请求，我的Name："
+						+ anyChatSDK.GetUserName(BussinessCenter.selfUserId)
+						+ "对方的Name："
+						+ anyChatSDK.GetUserName(otherID));
+		BussinessCenter.VideoCallControl(
+				AnyChatDefine.BRAC_VIDEOCALL_EVENT_REQUEST,
+				Integer.valueOf(otherID),
+				AnyChatDefine.BRAC_ERRORCODE_SUCCESS, 0, 0, "");
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -399,45 +427,6 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 				configEntity.mVideoAutoRotation);
 	}
 
-	// 用户离开或者进入房间触发
-	@Override
-	public void OnAnyChatUserAtRoomMessage(int dwUserId, boolean bEnter) {
-		BussinessCenter.getBussinessCenter().getOnlineUserDatas();// 刷新当前在线用户列表
-		for(int i = 0; i < BussinessCenter.mOnlineUserItems.size(); i++){
-			if(BussinessCenter.mOnlineUserItems.get(i).getUserId() != BussinessCenter.selfUserId){
-				OtherID = BussinessCenter.mOnlineUserItems.get(i).getUserId();
-			}
-			Log.i("cool", "Name：" + BussinessCenter.mOnlineUserItems.get(i).getUserName());
-		}
-//		if (bEnter) {// 有用户进入房间
-//			RoleInfo info = new RoleInfo();
-//			info.setUserID(String.valueOf(dwUserId));
-//			info.setName(anyChatSDK.GetUserName(dwUserId));
-//			info.setRoleIconID(getRoleRandomIconID());
-//			mRoleInfoList.add(info);
-//			mAdapter.notifyDataSetChanged();
-//			Log.i("cool", "有其他人进入房间了，进入房间的用户ID:" + dwUserId + "\n"
-//					+ "进入房间的用户名:" + info.getName());
-//			OtherID = dwUserId;
-//		} else {
-//			for (int i = 0; i < mRoleInfoList.size(); i++) {
-//				if (mRoleInfoList.get(i).getUserID().equals("" + dwUserId)) {
-//					mRoleInfoList.remove(i);
-//					mAdapter.notifyDataSetChanged();
-//				}
-//			}
-//		}
-	}
-
-	// 断网触发
-	@Override
-	public void OnAnyChatLinkCloseMessage(int dwErrorCode) {
-		mBtnStart
-				.setBackgroundColor(getResources().getColor(R.color.solid_red));
-		anyChatSDK.LeaveRoom(-1);
-		anyChatSDK.Logout();
-	}
-
 	// 广播
 	private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -466,18 +455,26 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 
 		switch (dwEventType) {
 		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_REQUEST: // 呼叫请求(接收方收到请求时触发)
-			Log.i("cool", "我接收到请求，我的Name为" + anyChatSDK.GetUserName(BussinessCenter.selfUserId) + 
-					"对方的Name为" + anyChatSDK.GetUserName(dwUserId));
+			Log.i("cool",
+					"我接收到请求，我的Name为"
+							+ anyChatSDK
+									.GetUserName(BussinessCenter.selfUserId)
+							+ "对方的Name为" + anyChatSDK.GetUserName(dwUserId));
 			// 发送通知栏通知，播放呼叫铃声
-			BussinessCenter.getBussinessCenter().onVideoCallRequest(dwUserId, dwFlags, dwParam, userStr);
-			BussinessCenter.VideoCallControl(AnyChatDefine.BRAC_VIDEOCALL_EVENT_REPLY, dwUserId,
+			BussinessCenter.getBussinessCenter().onVideoCallRequest(dwUserId,
+					dwFlags, dwParam, userStr);
+			BussinessCenter.VideoCallControl(
+					AnyChatDefine.BRAC_VIDEOCALL_EVENT_REPLY, dwUserId,
 					AnyChatDefine.BRAC_ERRORCODE_SUCCESS, 0, 0, null);
 			// onSelectItem(String.valueOf(dwUserId));
 			break;
 		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_REPLY:// 呼叫请求回复(发送方接收到接收方回复时触发)
 			if (dwErrorCode == AnyChatDefine.BRAC_ERRORCODE_SUCCESS) {
-				Log.i("cool", "我收到回复，我的Name为" + anyChatSDK.GetUserName(BussinessCenter.selfUserId) + 
-						"对方的Name为" + anyChatSDK.GetUserName(dwUserId));
+				Log.i("cool",
+						"我收到回复，我的Name为"
+								+ anyChatSDK
+										.GetUserName(BussinessCenter.selfUserId)
+								+ "对方的Name为" + anyChatSDK.GetUserName(dwUserId));
 				// 根据错误码判断控制铃声播放和通知栏
 				BussinessCenter.getBussinessCenter().onVideoCallReply(dwUserId,
 						dwErrorCode, dwFlags, dwParam, userStr);
@@ -485,25 +482,28 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 			break;
 		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_START:// 视频呼叫会话开始事件
 			Log.i("cool", "视频呼叫会话开始,下面将启动videoactivity");
-			Log.i("cool", "dwUserId:" + dwUserId + ";" + 
-					"dwFlags:" + dwFlags + ";" +
-					"dwParam:" + dwParam + ";" +
-					"userStr:" + userStr);
-			Log.i("cool", "视频通话将开始，我的Name为" + anyChatSDK.GetUserName(BussinessCenter.selfUserId) + 
-					"对方的Name为" + anyChatSDK.GetUserName(dwUserId));
+			Log.i("cool", "dwUserId:" + dwUserId + ";" + "dwFlags:" + dwFlags
+					+ ";" + "dwParam:" + dwParam + ";" + "userStr:" + userStr);
+			Log.i("cool",
+					"视频通话将开始，我的Name为"
+							+ anyChatSDK
+									.GetUserName(BussinessCenter.selfUserId)
+							+ "对方的Name为" + anyChatSDK.GetUserName(dwUserId));
 			BussinessCenter.getBussinessCenter().onVideoCallStart(dwUserId,
 					dwFlags, dwParam, userStr);
 			break;
 		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_FINISH:// 挂断（结束）呼叫会话
 			Log.i("cool", "会话挂断事件！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！");
-			 BussinessCenter.getBussinessCenter().onVideoCallEnd(dwUserId,
-			 dwFlags, dwParam, userStr);
+			BussinessCenter.getBussinessCenter().onVideoCallEnd(dwUserId,
+					dwFlags, dwParam, userStr);
 			break;
 		}
 	}
 
-	// 文字消息通知,dwFromUserid表示消息发送者的用户ID号，dwToUserid表示目标用户ID号，
-	// 可能为-1，表示对大家说，bSecret表示是否为悄悄话
+	/**
+	 * 收到信息时触发 文字消息通知,dwFromUserid表示消息发送者的用户ID号，dwToUserid表示目标用户ID号，
+	 * 可能为-1，表示对大家说，bSecret表示是否为悄悄话
+	 */
 	@Override
 	public void OnAnyChatTextMessage(int dwFromUserid, int dwToUserid,
 			boolean bSecret, String message) {

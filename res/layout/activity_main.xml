@@ -1,71 +1,73 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main_layout"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:background="@drawable/background"
     android:orientation="vertical" >
 
-    <Button
-        android:id="@+id/btn_start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="登陆" />
-
-    <Button
-        android:id="@+id/btn_end"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="注销" />
-
-    <Button
-        android:id="@+id/btn_call"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="呼叫" />
-
-    <EditText
-        android:id="@+id/et_name"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:editable="true"
-        android:ems="10"
-        android:hint="输入用户名" >
+        android:orientation="horizontal" >
 
-        <requestFocus />
-    </EditText>
+        <EditText
+            android:id="@+id/et_servername"
+            android:layout_width="220dip"
+            android:layout_height="wrap_content"
+            android:hint="tt88050643.xicp.net" />
 
-    <Button
-        android:id="@+id/btn_sendmessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="发送消息" />
+        <EditText
+            android:id="@+id/et_roomid"
+            android:layout_width="90dip"
+            android:layout_height="wrap_content"
+            android:hint="房间号:1" />
+    </LinearLayout>
 
-    <EditText
-        android:id="@+id/et_message"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:editable="true"
-        android:ems="10"
-        android:hint="输入要发送的消息" >
+        android:orientation="horizontal" >
 
-        <requestFocus />
-    </EditText>
+        <EditText
+            android:id="@+id/et_username"
+            android:layout_width="200dip"
+            android:layout_height="wrap_content"
+            android:editable="true"
+            android:ems="10"
+            android:hint="输入登陆用户名" >
 
-    <Button
-        android:id="@+id/btn_sendalphamessage"
-        android:layout_width="wrap_content"
+            <requestFocus />
+        </EditText>
+
+        <Button
+            android:id="@+id/btn_login"
+            android:layout_width="60dip"
+            android:layout_height="48dip"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/btn_green_normal"
+            android:textSize="20sp"
+            android:text="登陆" />
+
+        <Button
+            android:id="@+id/btn_logout"
+            android:layout_width="60dip"
+            android:layout_height="48dip"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/btn_green_normal"
+            android:textSize="20sp"
+            android:text="注销" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/lv_onlineuser"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="发送透明消息" />
-
-    <EditText
-        android:id="@+id/et_alphamessage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:editable="true"
-        android:ems="10"
-        android:hint="输入要发送的透明消息" >
-
-        <requestFocus />
-    </EditText>
+        android:layout_gravity="center"
+        android:layout_marginTop="30dip"
+        android:layout_weight="1"
+        android:cacheColorHint="#00000000"
+        android:listSelector="#00000000"
+        android:numColumns="auto_fit"
+        android:stretchMode="columnWidth" />
 
 </LinearLayout>

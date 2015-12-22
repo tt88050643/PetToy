@@ -1,6 +1,9 @@
 package com.example.helloanychat;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.example.bussinesscenter.OnlineUserItem;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -12,9 +15,9 @@ import android.widget.TextView;
 
 public class RoleListAdapter extends BaseAdapter {
 	private Context mContext;
-	private List<RoleInfo> mRoleList;
+	private ArrayList<OnlineUserItem> mRoleList;
 
-	public RoleListAdapter(Context context, List<RoleInfo> roleInfos) {
+	public RoleListAdapter(Context context, ArrayList<OnlineUserItem> roleInfos) {
 		super();
 		mContext = context;
 		mRoleList = roleInfos;
@@ -50,9 +53,9 @@ public class RoleListAdapter extends BaseAdapter {
 			holder = (ViewHolder) convertView.getTag();
 		}
 		
-		RoleInfo info = mRoleList.get(position);
-		holder.mname.setText("" + info.getName());
-		holder.mRoleID.setText("" + info.getUserID());
+		OnlineUserItem info = mRoleList.get(position);
+		holder.mname.setText("" + info.getUserName());
+		holder.mRoleID.setText("" + "ID:" + info.getUserId());
 		holder.mRoleIcon.setImageResource(info.getRoleIconID());
 		return convertView;
 	}

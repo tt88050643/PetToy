@@ -307,11 +307,12 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 
 	protected void onPause() {
 		super.onPause();
-		bOnPaused = true;
-		anychatSDK.UserCameraControl(userID, 0);
-		anychatSDK.UserSpeakControl(userID, 0);
-		anychatSDK.UserCameraControl(-1, 0);
-		anychatSDK.UserSpeakControl(-1, 0);
+		//注释掉下面，锁屏后可继续视频通话
+//		bOnPaused = true;
+//		anychatSDK.UserCameraControl(userID, 0);
+//		anychatSDK.UserSpeakControl(userID, 0);
+//		anychatSDK.UserCameraControl(-1, 0);
+//		anychatSDK.UserSpeakControl(-1, 0);
 	}
 
 	protected void onDestroy() {

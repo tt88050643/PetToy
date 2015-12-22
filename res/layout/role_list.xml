@@ -12,8 +12,8 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="horizontal"
         android:background="@drawable/button_background"
+        android:orientation="horizontal"
         android:padding="10dip" >
 
         <ImageView
@@ -22,21 +22,30 @@
             android:layout_height="48dp"
             android:src="@drawable/role_1" />
 
-        <TextView
-            android:id="@+id/mname"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="15dip"
-            android:layout_marginTop="15dip"
-            android:layout_weight="1"
-            android:text="佳佳佳佳佳佳偏偏" />
+            android:background="@drawable/button_background"
+            android:orientation="vertical"
+             >
 
-        <TextView
-            android:id="@+id/mRoleID"
-            android:layout_width="100dip"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dip"
-            android:text="58888888" />
+            <TextView
+                android:id="@+id/mname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dip"
+                android:layout_marginTop="5dip"
+                android:layout_weight="1"
+                android:text="佳佳佳佳佳佳偏偏" />
+
+            <TextView
+                android:id="@+id/mRoleID"
+                android:layout_width="100dip"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dip"
+                android:layout_marginLeft="10dip"
+                android:text="58888888" />
+        </LinearLayout>
     </LinearLayout>
-    
+
 </FrameLayout>
