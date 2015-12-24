@@ -21,7 +21,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-public class BackService extends Service{
+public class BackService extends Service {
 	private ActivityManager activityManager;
 	List<RunningAppProcessInfo> appProcesses;
 	private String packageName;
@@ -39,18 +39,25 @@ public class BackService extends Service{
 				Bundle bundle = intent.getExtras();
 				if (bundle != null) {
 					int userId = bundle.getInt("USERID");
-					cancelNotification(BACK_NOTIFICATIONID_BASE+userId);
+					cancelNotification(BACK_NOTIFICATIONID_BASE + userId);
 				}
 			}
 			if (intent.getAction().equals(BaseConst.ACTION_BACK_EQUESTSESSION)) {
 				Bundle bundle = intent.getExtras();
 				if (bundle != null) {
 					int userId = bundle.getInt("USERID");
-					showNotification(bundle.getString("USERNAME"), BACK_NOTIFICATIONID_BASE + userId);
+					showNotification(bundle.getString("USERNAME"),
+							BACK_NOTIFICATIONID_BASE + userId);
 				}
 			}
-			if (intent.getAction().equals(BaseConst.ACTION_BACK_CANCELNOTIFYTION)) {
+			if (intent.getAction().equals(
+					BaseConst.ACTION_BACK_CANCELNOTIFYTION)) {
 				cancelNotification();
+			}
+			if (intent.getAction().equals(BaseConst.ACTION_BACK_KILLSELF)) {
+				cancelNotification();
+				stopSelf();
+				Log.i("cool", "service kill self");
 			}
 
 		}
@@ -66,11 +73,14 @@ public class BackService extends Service{
 
 	private void registerBroad() {
 		mBroadCastRecevier = new RequestSdkBroadCast();
-		IntentFilter intentFilter = new IntentFilter(BaseConst.ACTION_BACK_EQUESTSESSION);
+		IntentFilter intentFilter = new IntentFilter(
+				BaseConst.ACTION_BACK_EQUESTSESSION);
 		this.registerReceiver(mBroadCastRecevier, intentFilter);
 		intentFilter = new IntentFilter(BaseConst.ACTION_BACK_CANCELSESSION);
 		this.registerReceiver(mBroadCastRecevier, intentFilter);
 		intentFilter = new IntentFilter(BaseConst.ACTION_BACK_CANCELNOTIFYTION);
+		this.registerReceiver(mBroadCastRecevier, intentFilter);
+		intentFilter = new IntentFilter(BaseConst.ACTION_BACK_KILLSELF);
 		this.registerReceiver(mBroadCastRecevier, intentFilter);
 	}
 
@@ -86,22 +96,25 @@ public class BackService extends Service{
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+		activityManager = (ActivityManager) this
+				.getSystemService(Context.ACTIVITY_SERVICE);
 		packageName = this.getPackageName();
-		//一个线程一直在循环控制通知的显示与不显示
+		// 一个线程一直在循环控制通知的显示与不显示
 		new Thread() {
 			public void run() {
 				try {
-					while (!bStop) {//如果service没停止运行
-						if (isAppOnForeground()) {//如果当前App在前台运行
-							if (!bFirstShow) { //不是第一次
+					while (!bStop) {// 如果service没停止运行
+						if (isAppOnForeground()) {// 如果当前App在前台运行
+							if (!bFirstShow) { // 不是第一次
 								cancelNotification();
 								bFirstShow = true;
 								BussinessCenter.bBack = false;
 							}
 						} else {
 							if (bFirstShow) {
-								showNotification(BackService.this.getString(R.string.BACKING_RUNING),
+								showNotification(
+										BackService.this
+												.getString(R.string.BACKING_RUNING),
 										BACK_NOTIFICATION_APP);
 								bFirstShow = false;
 								BussinessCenter.bBack = true;
@@ -121,6 +134,7 @@ public class BackService extends Service{
 
 	/**
 	 * 检查程序是否在前台运行
+	 * 
 	 * @return 是否在前台运行
 	 */
 	public boolean isAppOnForeground() {
@@ -160,6 +174,7 @@ public class BackService extends Service{
 	 *            通知id
 	 */
 	public void showNotification(String strText, int notification_id) {
+
 		// 得到NotificationManager
 		Log.i("cool", "showNotification");
 		NotificationManager notificationManager = (NotificationManager) getSystemService(android.content.Context.NOTIFICATION_SERVICE);
@@ -173,18 +188,21 @@ public class BackService extends Service{
 		notification.ledOffMS = 100;
 		Intent notificationIntent = new Intent(BussinessCenter.mContext,
 				BussinessCenter.mContext.getClass());
-//		Intent notificationIntent = new Intent(MainActivity.mContext,
-//				MainActivity.mContext.getClass());
+		// Intent notificationIntent = new Intent(MainActivity.mContext,
+		// MainActivity.mContext.getClass());
 		notificationIntent.putExtra("action", 2);
 		notificationIntent.setAction(Intent.ACTION_MAIN);
 		notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 		PendingIntent contentIntent = PendingIntent.getActivity(
 				BussinessCenter.mContext, 0, notificationIntent,
 				PendingIntent.FLAG_UPDATE_CURRENT);
-//		PendingIntent contentIntent = PendingIntent.getActivity(
-//				MainActivity.mContext, 0, notificationIntent,
-//				PendingIntent.FLAG_UPDATE_CURRENT);
-		notification.setLatestEventInfo(this, this.getString(R.string.BACKING_RUNING), strText, contentIntent);
+		// PendingIntent contentIntent = PendingIntent.getActivity(
+		// MainActivity.mContext, 0, notificationIntent,
+		// PendingIntent.FLAG_UPDATE_CURRENT);
+		notification
+				.setLatestEventInfo(this,
+						this.getString(R.string.BACKING_RUNING), strText,
+						contentIntent);
 		notificationManager.notify(notification_id, notification);
 	}
 
@@ -197,6 +215,7 @@ public class BackService extends Service{
 			System.out.println(e);
 		}
 	}
+
 	public void cancelNotification() {
 		try {
 			NotificationManager notificationManager = (NotificationManager) getSystemService(android.content.Context.NOTIFICATION_SERVICE);
@@ -205,6 +224,5 @@ public class BackService extends Service{
 			System.out.println(e);
 		}
 	}
-	
 
 }

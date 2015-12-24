@@ -34,19 +34,30 @@
             android:layout_height="wrap_content"
             android:editable="true"
             android:ems="10"
-            android:hint="输入登陆用户名" >
+            android:hint="输入登录用户名" >
 
             <requestFocus />
         </EditText>
 
-        <Button
-            android:id="@+id/btn_login"
-            android:layout_width="60dip"
-            android:layout_height="48dip"
-            android:layout_gravity="center_vertical"
-            android:background="@drawable/btn_green_normal"
-            android:textSize="20sp"
-            android:text="登陆" />
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <Button
+                android:id="@+id/btn_login"
+                android:layout_width="60dip"
+                android:layout_height="48dip"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/btn_green_normal"
+                android:text="登录"
+                android:textSize="20sp" />
+
+            <ProgressBar
+                android:id="@+id/pb_login"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <Button
             android:id="@+id/btn_logout"
@@ -54,8 +65,8 @@
             android:layout_height="48dip"
             android:layout_gravity="center_vertical"
             android:background="@drawable/btn_green_normal"
-            android:textSize="20sp"
-            android:text="注销" />
+            android:text="注销"
+            android:textSize="20sp" />
     </LinearLayout>
 
     <ListView

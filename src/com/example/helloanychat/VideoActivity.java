@@ -3,6 +3,7 @@ package com.example.helloanychat;
 import com.bairuitech.anychat.AnyChatBaseEvent;
 import com.bairuitech.anychat.AnyChatCoreSDK;
 import com.bairuitech.anychat.AnyChatDefine;
+import com.bairuitech.anychat.AnyChatTextMsgEvent;
 import com.bairuitech.anychat.AnyChatVideoCallEvent;
 import com.example.bussinesscenter.BussinessCenter;
 
@@ -22,21 +23,24 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChatVideoCallEvent {
+public class VideoActivity extends Activity implements AnyChatBaseEvent,
+		AnyChatVideoCallEvent, AnyChatTextMsgEvent {
 
-	private final int UPDATEVIDEOBITDELAYMILLIS = 200; //监听音频视频的码率的间隔刷新时间（毫秒）
-	
+	private final int UPDATEVIDEOBITDELAYMILLIS = 200; // 监听音频视频的码率的间隔刷新时间（毫秒）
+
 	int userID;
 	boolean bOnPaused = false;
 	private boolean bSelfVideoOpened = false; // 本地视频是否已打开
 	private boolean bOtherVideoOpened = false; // 对方视频是否已打开
-	private Boolean mFirstGetVideoBitrate = false; //"第一次"获得视频码率的标致
-	private Boolean mFirstGetAudioBitrate = false; //"第一次"获得音频码率的标致
+	private Boolean mFirstGetVideoBitrate = false; // "第一次"获得视频码率的标致
+	private Boolean mFirstGetAudioBitrate = false; // "第一次"获得音频码率的标致
 
 	private SurfaceView mOtherView;
 	private SurfaceView mMyView;
@@ -44,7 +48,8 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 	private Button mEndCallBtn;
 	private ImageButton mBtnCameraCtrl; // 控制视频的按钮
 	private ImageButton mBtnSpeakCtrl; // 控制音频的按钮
-
+	private EditText mEtEditMsg;
+	private Button mBynSendMsg;
 	public AnyChatCoreSDK anychatSDK;
 
 	@Override
@@ -65,6 +70,7 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 		anychatSDK = new AnyChatCoreSDK();
 		anychatSDK.SetBaseEvent(this);
 		anychatSDK.SetVideoCallEvent(this);
+		anychatSDK.SetTextMessageEvent(this);
 		anychatSDK.mSensorHelper.InitSensor(this);
 		AnyChatCoreSDK.mCameraHelper.SetContext(this);
 	}
@@ -78,10 +84,13 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 		mEndCallBtn = (Button) findViewById(R.id.endCall);
 		mBtnSpeakCtrl = (ImageButton) findViewById(R.id.btn_speakControl);
 		mBtnCameraCtrl = (ImageButton) findViewById(R.id.btn_cameraControl);
+		mEtEditMsg = (EditText) findViewById(R.id.et_editmsg);
+		mBynSendMsg = (Button) findViewById(R.id.btn_sendmsg);
 		mBtnSpeakCtrl.setOnClickListener(onClickListener);
 		mBtnCameraCtrl.setOnClickListener(onClickListener);
 		mImgSwitchVideo.setOnClickListener(onClickListener);
 		mEndCallBtn.setOnClickListener(onClickListener);
+		mBynSendMsg.setOnClickListener(onClickListener);
 		// 如果是采用Java视频采集，则需要设置Surface的CallBack
 		if (AnyChatCoreSDK
 				.GetSDKOptionInt(AnyChatDefine.BRAC_SO_LOCALVIDEO_CAPDRIVER) == AnyChatDefine.VIDEOCAP_DRIVER_JAVA) {
@@ -145,33 +154,33 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 						AnyChatDefine.BRAC_USERSTATE_VIDEOBITRATE);
 				int audioBitrate = anychatSDK.QueryUserStateInt(userID,
 						AnyChatDefine.BRAC_USERSTATE_AUDIOBITRATE);
-				if (videoBitrate > 0)
-				{
-					//handler.removeCallbacks(runnable);
+				if (videoBitrate > 0) {
+					// handler.removeCallbacks(runnable);
 					mFirstGetVideoBitrate = true;
 					mOtherView.setBackgroundColor(Color.TRANSPARENT);
 				}
-				
-				if(audioBitrate > 0){
+
+				if (audioBitrate > 0) {
 					mFirstGetAudioBitrate = true;
 				}
-				
-				if (mFirstGetVideoBitrate)
-				{
-					if (videoBitrate <= 0){	//等待第一次获得码率，第一次码率大于0后，认为视频已经接通，此后的码率都应该大于0，否则认为视频断线					
-						Toast.makeText(VideoActivity.this, "对方视频中断了!", Toast.LENGTH_SHORT).show();
+
+				if (mFirstGetVideoBitrate) {
+					if (videoBitrate <= 0) { // 等待第一次获得码率，第一次码率大于0后，认为视频已经接通，此后的码率都应该大于0，否则认为视频断线
+						Toast.makeText(VideoActivity.this, "对方视频中断了!",
+								Toast.LENGTH_SHORT).show();
 						// 重置下，如果对方退出了，有进去了的情况
 						mFirstGetVideoBitrate = false;
-						//finish();
+						// finish();
 					}
 				}
-				
-				if (mFirstGetAudioBitrate){
-					if (audioBitrate <= 0){
-						Toast.makeText(VideoActivity.this, "对方音频中断了!", Toast.LENGTH_SHORT).show();
+
+				if (mFirstGetAudioBitrate) {
+					if (audioBitrate <= 0) {
+						Toast.makeText(VideoActivity.this, "对方音频中断了!",
+								Toast.LENGTH_SHORT).show();
 						// 重置下，如果对方退出了，有进去了的情况
 						mFirstGetAudioBitrate = false;
-						//finish();
+						// finish();
 					}
 				}
 
@@ -187,7 +196,6 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 		public void onClick(View view) {
 			switch (view.getId()) {
 			case (R.id.ImgSwichVideo): {
-
 				// 如果是采用Java视频采集，则在Java层进行摄像头切换
 				if (AnyChatCoreSDK
 						.GetSDKOptionInt(AnyChatDefine.BRAC_SO_LOCALVIDEO_CAPDRIVER) == AnyChatDefine.VIDEOCAP_DRIVER_JAVA) {
@@ -208,9 +216,9 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 				}
 			}
 				break;
-			case (R.id.endCall): {
+			case (R.id.endCall):
 				exitVideoDialog();
-			}
+				break;
 			case R.id.btn_speakControl:
 				if ((anychatSDK.GetSpeakState(-1) == 1)) {
 					mBtnSpeakCtrl.setImageResource(R.drawable.speak_off);
@@ -229,6 +237,10 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 					mBtnCameraCtrl.setImageResource(R.drawable.camera_on);
 					anychatSDK.UserCameraControl(-1, 1);
 				}
+				break;
+			case R.id.btn_sendmsg:
+				String msg = mEtEditMsg.getText().toString();
+				anychatSDK.SendTextMessage(userID, 1, msg);
 				break;
 			default:
 				break;
@@ -258,9 +270,10 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 							public void onClick(DialogInterface dialog,
 									int which) {
 								BussinessCenter.sessionItem = null;
-								BussinessCenter.VideoCallControl(AnyChatDefine.BRAC_VIDEOCALL_EVENT_FINISH, userID, 0,
-										0, BussinessCenter.selfUserId, "");
-								
+								BussinessCenter
+										.VideoCallControl(
+												AnyChatDefine.BRAC_VIDEOCALL_EVENT_FINISH,
+												userID, 0, 0, -1, "");
 								destroyCurActivity();
 							}
 						})
@@ -274,8 +287,13 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 	}
 
 	private void destroyCurActivity() {
-		onPause();
-		onDestroy();
+		anychatSDK.UserCameraControl(userID, 0);
+		anychatSDK.UserSpeakControl(userID, 0);
+		anychatSDK.UserCameraControl(-1, 0);
+		anychatSDK.UserSpeakControl(-1, 0);
+		bOtherVideoOpened = false;
+		bSelfVideoOpened = false;
+		finish();
 	}
 
 	@Override
@@ -283,7 +301,6 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			exitVideoDialog();
 		}
-
 		return super.onKeyDown(keyCode, event);
 	}
 
@@ -307,19 +324,18 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 
 	protected void onPause() {
 		super.onPause();
-		//注释掉下面，锁屏后可继续视频通话
-//		bOnPaused = true;
-//		anychatSDK.UserCameraControl(userID, 0);
-//		anychatSDK.UserSpeakControl(userID, 0);
-//		anychatSDK.UserCameraControl(-1, 0);
-//		anychatSDK.UserSpeakControl(-1, 0);
+		// 注释掉下面，锁屏后可继续视频通话
+		// bOnPaused = true;
+		// anychatSDK.UserCameraControl(userID, 0);
+		// anychatSDK.UserSpeakControl(userID, 0);
+		// anychatSDK.UserCameraControl(-1, 0);
+		// anychatSDK.UserSpeakControl(-1, 0);
 	}
 
 	protected void onDestroy() {
 		super.onDestroy();
 		handler.removeCallbacks(runnable);
 		anychatSDK.mSensorHelper.DestroySensor();
-		finish();
 	}
 
 	public void adjustLocalVideo(boolean bLandScape) {
@@ -399,7 +415,8 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 	public void OnAnyChatUserAtRoomMessage(int dwUserId, boolean bEnter) {
 		if (!bEnter) {
 			if (dwUserId == userID) {
-				Toast.makeText(VideoActivity.this, "对方已离开！", Toast.LENGTH_SHORT).show();
+				Toast.makeText(VideoActivity.this, "对方已离开！", Toast.LENGTH_SHORT)
+						.show();
 				userID = 0;
 				anychatSDK.UserCameraControl(dwUserId, 0);
 				anychatSDK.UserSpeakControl(dwUserId, 0);
@@ -408,7 +425,8 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 		} else {
 			if (userID != 0)
 				return;
-			int index = anychatSDK.mVideoHelper.bindVideo(mOtherView.getHolder());
+			int index = anychatSDK.mVideoHelper.bindVideo(mOtherView
+					.getHolder());
 			anychatSDK.mVideoHelper.SetVideoUser(index, dwUserId);
 			anychatSDK.UserCameraControl(dwUserId, 1);
 			anychatSDK.UserSpeakControl(dwUserId, 1);
@@ -450,9 +468,22 @@ public class VideoActivity extends Activity implements AnyChatBaseEvent, AnyChat
 		case AnyChatDefine.BRAC_VIDEOCALL_EVENT_FINISH:// 挂断（结束）呼叫会话
 			Log.i("cool", "会话挂断事件！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！");
 			BussinessCenter.sessionItem = null;
-			finish();
 			destroyCurActivity();
 			break;
 		}
+	}
+
+	@Override
+	public void OnAnyChatTextMessage(int dwFromUserid, int dwToUserid,
+			boolean bSecret, String message) {
+		Log.i("cool",
+				"VideoActivity中收到消息，from:"
+						+ anychatSDK.GetUserName(dwFromUserid) + "到:"
+						+ anychatSDK.GetUserName(dwToUserid) + "消息内容是:"
+						+ message);
+		Toast.makeText(
+				this,
+				"收到" + anychatSDK.GetUserName(dwFromUserid) + "发来的信息："
+						+ message, Toast.LENGTH_LONG).show();
 	}
 }

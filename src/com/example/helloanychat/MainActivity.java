@@ -1,9 +1,5 @@
 package com.example.helloanychat;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 import com.bairuitech.anychat.AnyChatBaseEvent;
 import com.bairuitech.anychat.AnyChatCoreSDK;
 import com.bairuitech.anychat.AnyChatDefine;
@@ -17,15 +13,17 @@ import com.example.config.ConfigService;
 import com.example.util.BaseConst;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -34,6 +32,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements AnyChatBaseEvent,
@@ -60,7 +59,8 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	private EditText mEtUserName;// 我登陆的用户名
 	private EditText mEtRoomID;// 我进入的房间号
 	private EditText mEtServerName;
-
+	private ProgressBar pb_login;
+	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -73,7 +73,8 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		startBackServce();// 开启后台service，用于当程序进入后台后在通知栏控制通知
 		BussinessCenter.getBussinessCenter();
 	}
-
+	
+	
 	// 开启后台service
 	protected void startBackServce() {
 		Intent intent = new Intent();
@@ -101,13 +102,14 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		mEtServerName = (EditText) findViewById(R.id.et_servername);
 		mEtRoomID = (EditText) findViewById(R.id.et_roomid);
 		mLvOnlineUsers = (ListView) findViewById(R.id.lv_onlineuser);
-
+		pb_login = (ProgressBar) findViewById(R.id.pb_login);
 		ReadLoginData();
 		mBtnLogin.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				mStrUserName = mEtUserName.getText().toString();
 				mStrIP = mEtServerName.getText().toString();
+				pb_login.setVisibility(View.VISIBLE);
 				anyChatSDK.Connect(mStrIP, mIntPort);
 				anyChatSDK.Login(mStrUserName, "");
 			}
@@ -119,6 +121,7 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 				anyChatSDK.Logout();
 				mBtnLogout.setBackgroundResource(R.drawable.btn_green_pressed);
 				mBtnLogin.setBackgroundResource(R.drawable.btn_green_normal);
+				updateUserList();
 			}
 		});
 		/***
@@ -203,14 +206,22 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	}
 
 	protected void onDestroy() {
-		super.onDestroy();
 		Log.i("cool", "onDestroy");
 		anyChatSDK.LeaveRoom(-1);
 		anyChatSDK.Logout();
 		anyChatSDK.Release();
 		unregisterReceiver(mBroadcastReceiver);
+		super.onDestroy();
 	}
 
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			showExitDialog(this);
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+	
 	protected void onResume() {
 		super.onResume();
 		InitSDK();
@@ -259,6 +270,7 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	@Override
 	public void OnAnyChatOnlineUserMessage(int dwUserNum, int dwRoomId) {
 		Log.i("cool", "我进来了,进入房间后触发一次");
+		pb_login.setVisibility(View.GONE);
 		mBtnLogin.setBackgroundResource(R.drawable.btn_green_pressed);
 		mBtnLogout.setBackgroundResource(R.drawable.btn_green_normal);
 		Toast.makeText(this, "登陆成功", Toast.LENGTH_SHORT).show();
@@ -290,6 +302,7 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 		mBtnLogout.setBackgroundResource(R.drawable.btn_green_normal);
 		anyChatSDK.LeaveRoom(-1);
 		anyChatSDK.Logout();
+		updateUserList();
 	}
 
 	private void createUserList() {
@@ -535,5 +548,21 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	public void OnAnyChatSDKFilterData(byte[] lpBuf, int dwLen) {
 		Log.i("cool", "SDK Filter 通信数据回调函数定义");
 	}
-
+	
+	public void showExitDialog(final Context context) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		builder.setMessage("Are you sure to exit ?").setCancelable(false).setPositiveButton("Yes",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								sendBroadcast(new Intent(BaseConst.ACTION_BACK_KILLSELF));
+								finish();
+							}
+						}).setNegativeButton("No", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						dialog.cancel();
+					}
+				}).show();
+	}
 }
