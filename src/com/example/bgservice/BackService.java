@@ -20,7 +20,11 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-
+/**
+ * 在后台运行的service，
+ * @author zhaimeng
+ *
+ */
 public class BackService extends Service {
 	private ActivityManager activityManager;
 	List<RunningAppProcessInfo> appProcesses;
