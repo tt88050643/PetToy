@@ -105,7 +105,7 @@ public class AnyChatCameraHelper implements SurfaceHolder.Callback{
 			// 设置视频输出回调函数，通过AnyChat的外部视频输入接口传入AnyChat内核进行处理
 			mCamera.setPreviewCallbackWithBuffer(new Camera.PreviewCallback() {
 				@Override
-				public void onPreviewFrame(byte[] data, Camera camera) {
+				public void onPreviewFrame(byte[] data, Camera camera) {//摄像头采集的视频数据在data数组中
 					if(data.length !=0 && bNeedCapture) {
 						AnyChatCoreSDK.InputVideoData(data, data.length, 0);
 					}
