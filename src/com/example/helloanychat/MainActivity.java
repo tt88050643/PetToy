@@ -1,17 +1,5 @@
 package com.example.helloanychat;
 
-import com.bairuitech.anychat.AnyChatBaseEvent;
-import com.bairuitech.anychat.AnyChatCoreSDK;
-import com.bairuitech.anychat.AnyChatDefine;
-import com.bairuitech.anychat.AnyChatTextMsgEvent;
-import com.bairuitech.anychat.AnyChatTransDataEvent;
-import com.bairuitech.anychat.AnyChatVideoCallEvent;
-import com.example.bussinesscenter.BussinessCenter;
-import com.example.bussinesscenter.OnlineUserItem;
-import com.example.config.ConfigEntity;
-import com.example.config.ConfigService;
-import com.example.util.BaseConst;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -25,8 +13,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
@@ -34,6 +22,18 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.bairuitech.anychat.AnyChatBaseEvent;
+import com.bairuitech.anychat.AnyChatCoreSDK;
+import com.bairuitech.anychat.AnyChatDefine;
+import com.bairuitech.anychat.AnyChatTextMsgEvent;
+import com.bairuitech.anychat.AnyChatTransDataEvent;
+import com.bairuitech.anychat.AnyChatVideoCallEvent;
+import com.example.bussinesscenter.BussinessCenter;
+import com.example.bussinesscenter.OnlineUserItem;
+import com.example.config.ConfigEntity;
+import com.example.config.ConfigService;
+import com.example.util.BaseConst;
 
 public class MainActivity extends Activity implements AnyChatBaseEvent,
 		AnyChatTransDataEvent, AnyChatTextMsgEvent, AnyChatVideoCallEvent {
@@ -119,8 +119,8 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 			public void onClick(View v) {
 				anyChatSDK.LeaveRoom(-1);
 				anyChatSDK.Logout();
-				mBtnLogout.setBackgroundResource(R.drawable.btn_green_pressed);
-				mBtnLogin.setBackgroundResource(R.drawable.btn_green_normal);
+				//mBtnLogout.setBackgroundResource(R.drawable.btn_green_pressed);
+				//mBtnLogin.setBackgroundResource(R.drawable.btn_green_normal);
 				updateUserList();
 			}
 		});
@@ -271,8 +271,8 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	public void OnAnyChatOnlineUserMessage(int dwUserNum, int dwRoomId) {
 		Log.i("cool", "我进来了,进入房间后触发一次");
 		pb_login.setVisibility(View.GONE);
-		mBtnLogin.setBackgroundResource(R.drawable.btn_green_pressed);
-		mBtnLogout.setBackgroundResource(R.drawable.btn_green_normal);
+//		mBtnLogin.setBackgroundColor(R.color.solid_black);
+//		mBtnLogout.setBackgroundColor(R.color.solid_green);
 		Toast.makeText(this, "登陆成功", Toast.LENGTH_SHORT).show();
 		createUserList();
 		for (OnlineUserItem eachone : BussinessCenter.mOnlineUserItems) {
@@ -298,8 +298,8 @@ public class MainActivity extends Activity implements AnyChatBaseEvent,
 	// 断网触发
 	@Override
 	public void OnAnyChatLinkCloseMessage(int dwErrorCode) {
-		mBtnLogin.setBackgroundResource(R.drawable.btn_green_normal);
-		mBtnLogout.setBackgroundResource(R.drawable.btn_green_normal);
+		//mBtnLogin.setBackgroundResource(R.drawable.btn_green_normal);
+		//mBtnLogout.setBackgroundResource(R.drawable.btn_green_normal);
 		anyChatSDK.LeaveRoom(-1);
 		anyChatSDK.Logout();
 		updateUserList();

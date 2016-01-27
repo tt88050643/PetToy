@@ -1,8 +1,5 @@
 package com.example.bussinesscenter;
 
-import java.util.ArrayList;
-import java.util.Random;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -13,12 +10,14 @@ import android.util.Log;
 
 import com.bairuitech.anychat.AnyChatCoreSDK;
 import com.bairuitech.anychat.AnyChatDefine;
-import com.example.helloanychat.MainActivity;
 import com.example.helloanychat.R;
 import com.example.helloanychat.VideoActivity;
 import com.example.util.BaseConst;
 import com.example.util.BaseMethod;
 import com.example.util.ScreenInfo;
+
+import java.util.ArrayList;
+import java.util.Random;
 
 public class BussinessCenter {
 
